@@ -335,13 +335,13 @@
             </sasl>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:infinispan:9.1">
-            <cache-container name="web" default-cache="jdg" module="org.wildfly.clustering.web.infinispan">
+            <cache-container name="web" default-cache="repl" module="org.wildfly.clustering.web.infinispan">
                 <transport lock-timeout="60000"/>
-                <invalidation-cache name="jdg">
+                <replicated-cache name="repl">
                     <locking isolation="REPEATABLE_READ"/>
                     <transaction mode="BATCH"/>
-                    <hotrod-store remote-cache-container="DG1" fetch-state="false" passivation="false" purge="false" shared="true"/>
-                </invalidation-cache>
+                    <file-store/>
+                </replicated-cache>
                 <replicated-cache name="sso">
                     <locking isolation="REPEATABLE_READ"/>
                     <transaction mode="BATCH"/>
@@ -359,15 +359,21 @@
                     <transaction mode="BATCH"/>
                 </replicated-cache>
             </cache-container>
-            <cache-container name="ejb" aliases="sfsb" default-cache="dist" module="org.wildfly.clustering.ejb.infinispan">
+            <cache-container name="ejb" aliases="sfsb" default-cache="repl" module="org.wildfly.clustering.ejb.infinispan">
                 <transport lock-timeout="60000"/>
+                <replicated-cache name="repl">
+                    <locking isolation="REPEATABLE_READ"/>
+                    <transaction mode="BATCH"/>
+                    <object-memory size="10000"/>
+                    <file-store/>
+                </replicated-cache>
                 <distributed-cache name="dist">
                     <locking isolation="REPEATABLE_READ"/>
                     <transaction mode="BATCH"/>
                     <file-store/>
                 </distributed-cache>
             </cache-container>
-            <cache-container name="hibernate" module="org.infinispan.hibernate-cache">
+            <cache-container name="hibernate" default-cache="local-query" module="org.infinispan.hibernate-cache">
                 <transport lock-timeout="60000"/>
                 <local-cache name="local-query">
                     <object-memory size="10000"/>
@@ -379,14 +385,6 @@
                 </invalidation-cache>
                 <replicated-cache name="timestamps"/>
             </cache-container>
-            <remote-cache-container name="DG1" default-remote-cluster="data-grid-cluster">
-                <remote-clusters>
-                    <remote-cluster name="data-grid-cluster" socket-bindings="DG1"/>
-                </remote-clusters>
-                <property name="infinispan.client.hotrod.auth_username">developer</property>
-    		<property name="infinispan.client.hotrod.auth_password">b3bMY2ca6YDFWByx</property>
-		<property name="infinispan.client.hotrod.auth_realm">default</property>
-            </remote-cache-container>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:io:3.0">
             <worker name="default"/>
@@ -636,9 +634,6 @@
         <socket-binding name="modcluster" multicast-address="${jboss.modcluster.multicast.address:224.0.1.105}" multicast-port="23364"/>
         <socket-binding name="txn-recovery-environment" port="4712"/>
         <socket-binding name="txn-status-manager" port="4713"/>
-        <outbound-socket-binding name="DG1">
-            <remote-destination host="infinispan-cluster-dg8test.apps.integrationcluster.lab.upshift.rdu2.redhat.com" port="443"/>
-        </outbound-socket-binding>
         <outbound-socket-binding name="http-messaging">
             <remote-destination host="${jboss.messaging.host:localhost}" port="${jboss.http.port:8080}"/>
         </outbound-socket-binding>
